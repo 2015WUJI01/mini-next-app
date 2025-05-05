@@ -86,7 +86,12 @@ export function Calendar({
   locale?: Locale;
   visibleViews?: CalendarView[];
 }) {
-  const [date, setDate] = useState(defaultDate);
+  // 确保使用本地时区的日期
+  const [date, setDate] = useState(() => {
+    // 创建一个基于本地时区的日期对象
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+  });
   const [view, setView] = useState<CalendarView>(() => {
     // 如果默认视图不在可见视图列表中，则使用第一个可见视图
     return visibleViews.includes(defaultView) ? defaultView : visibleViews[0] || 'month';
@@ -100,7 +105,9 @@ export function Calendar({
   }, [visibleViews, view]);
 
   const today = useCallback(() => {
-    setDate(new Date());
+    // 创建一个基于本地时区的今天日期
+    const now = new Date();
+    setDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0));
   }, []);
 
   const next = useCallback(() => {
@@ -201,7 +208,9 @@ export function Calendar({
   });
 
   useHotkeys('t', () => {
-    setDate(new Date());
+    // 创建一个基于本地时区的今天日期
+    const now = new Date();
+    setDate(new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0));
   });
 
   return (
