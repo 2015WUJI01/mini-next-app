@@ -556,21 +556,23 @@ export function CalendarMonthView({
               key={i}
               variant="ghost"
               className={cn(
-                'h-auto min-h-[100px] p-2 font-normal',
+                'h-auto min-h-[100px] p-2 font-normal flex flex-col items-start justify-start',
                 !isCurrentMonth && 'text-muted-foreground',
                 isToday(day) && 'bg-primary/10'
               )}
               onClick={() => handleDayClick(day)}
             >
-              <div className="w-full flex flex-col items-start">
-                <div
-                  className={cn(
-                    'self-start mb-2',
-                    !isCurrentMonth && 'text-muted-foreground',
-                    isToday(day) && 'bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center'
-                  )}
-                >
-                  {format(day, 'd')}
+              <div className="w-full flex flex-col">
+                <div className="flex justify-start mb-2">
+                  <div
+                    className={cn(
+                      'w-6 h-6 flex items-center justify-center',
+                      !isCurrentMonth && 'text-muted-foreground',
+                      isToday(day) && 'bg-primary text-primary-foreground rounded-full'
+                    )}
+                  >
+                    {format(day, 'd')}
+                  </div>
                 </div>
                 <div className="space-y-1 w-full">
                   {dayEvents.slice(0, 3).map((event) => (
@@ -596,6 +598,7 @@ export function CalendarMonthView({
                       + {dayEvents.length - 3} more
                     </div>
                   )}
+                  {dayEvents.length === 0 && <div className="h-4"></div>}
                 </div>
               </div>
             </Button>
@@ -819,4 +822,4 @@ export function CalendarTodayTrigger({
       {props.children}
     </Button>
   );
-} 
+}
