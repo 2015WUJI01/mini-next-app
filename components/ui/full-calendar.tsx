@@ -61,6 +61,7 @@ interface CalendarContextProps {
   view: CalendarView;
   events: CalendarEvent[];
   locale?: Locale;
+  visibleViews: CalendarView[];
   setDate: React.Dispatch<React.SetStateAction<Date>>;
   setView: React.Dispatch<React.SetStateAction<CalendarView>>;
   next: () => void;
@@ -76,15 +77,27 @@ export function Calendar({
   defaultDate = new Date(),
   defaultView = 'month',
   locale = zhCN,
+  visibleViews = ['day', 'week', 'month', 'year'],
 }: {
   events?: CalendarEvent[];
   children?: React.ReactNode;
   defaultDate?: Date;
   defaultView?: CalendarView;
   locale?: Locale;
+  visibleViews?: CalendarView[];
 }) {
   const [date, setDate] = useState(defaultDate);
-  const [view, setView] = useState<CalendarView>(defaultView);
+  const [view, setView] = useState<CalendarView>(() => {
+    // 如果默认视图不在可见视图列表中，则使用第一个可见视图
+    return visibleViews.includes(defaultView) ? defaultView : visibleViews[0] || 'month';
+  });
+
+  // 当visibleViews变化且当前视图不可见时，切换到第一个可见视图
+  useEffect(() => {
+    if (!visibleViews.includes(view) && visibleViews.length > 0) {
+      setView(visibleViews[0]);
+    }
+  }, [visibleViews, view]);
 
   const today = useCallback(() => {
     setDate(new Date());
@@ -162,20 +175,29 @@ export function Calendar({
     }
   });
 
+  // 只为可见视图添加快捷键
   useHotkeys('d', () => {
-    setView('day');
+    if (visibleViews.includes('day')) {
+      setView('day');
+    }
   });
 
   useHotkeys('w', () => {
-    setView('week');
+    if (visibleViews.includes('week')) {
+      setView('week');
+    }
   });
 
   useHotkeys('m', () => {
-    setView('month');
+    if (visibleViews.includes('month')) {
+      setView('month');
+    }
   });
 
   useHotkeys('y', () => {
-    setView('year');
+    if (visibleViews.includes('year')) {
+      setView('year');
+    }
   });
 
   useHotkeys('t', () => {
@@ -184,7 +206,7 @@ export function Calendar({
 
   return (
     <CalendarContext.Provider
-      value={{ date, setDate, view, setView, events, next, prev, today, locale }}
+      value={{ date, setDate, view, setView, events, next, prev, today, locale, visibleViews }}
     >
       {children}
     </CalendarContext.Provider>
@@ -215,8 +237,10 @@ export function CalendarDayView({
   const view = context.view;
   const events = context.events;
   const contextLocale = context.locale;
+  const visibleViews = context.visibleViews;
 
-  if (view !== 'day') {
+  // 如果日视图不在可见视图列表中或当前视图不是日视图，则不渲染
+  if (!visibleViews.includes('day') || view !== 'day') {
     return null;
   }
 
@@ -329,8 +353,10 @@ export function CalendarWeekView({
   const view = context.view;
   const events = context.events;
   const locale = context.locale;
+  const visibleViews = context.visibleViews;
 
-  if (view !== 'week') {
+  // 如果周视图不在可见视图列表中或当前视图不是周视图，则不渲染
+  if (!visibleViews.includes('week') || view !== 'week') {
     return null;
   }
 
@@ -472,8 +498,10 @@ export function CalendarMonthView({
   const locale = context.locale;
   const setDate = context.setDate;
   const setView = context.setView;
+  const visibleViews = context.visibleViews;
 
-  if (view !== 'month') {
+  // 如果月视图不在可见视图列表中或当前视图不是月视图，则不渲染
+  if (!visibleViews.includes('month') || view !== 'month') {
     return null;
   }
 
@@ -623,8 +651,10 @@ export function CalendarYearView({
   const locale = context.locale;
   const setDate = context.setDate;
   const setView = context.setView;
+  const visibleViews = context.visibleViews;
 
-  if (view !== 'year') {
+  // 如果年视图不在可见视图列表中或当前视图不是年视图，则不渲染
+  if (!visibleViews.includes('year') || view !== 'year') {
     return null;
   }
 
@@ -691,6 +721,12 @@ export function CalendarViewTrigger({
   const context = useCalendar();
   const currentView = context.view;
   const setView = context.setView;
+  const visibleViews = context.visibleViews;
+
+  // 如果视图不在可见视图列表中，则不渲染此按钮
+  if (!visibleViews.includes(view)) {
+    return null;
+  }
 
   return (
     <Button

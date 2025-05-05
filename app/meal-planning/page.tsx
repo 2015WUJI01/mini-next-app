@@ -195,6 +195,8 @@ export default function MealPlanningPage() {
         <Calendar 
           events={events} 
           locale={zhCN}
+          defaultView="month"
+          visibleViews={['month']}
         >
           <div className="h-[calc(100vh-250px)] flex flex-col">
             <div className="flex px-2 items-center gap-2 mb-6">
