@@ -72,67 +72,85 @@ export default function MealPlanningPage() {
     
     const newEvents: CalendarEvent[] = [];
     
+    // 辅助函数：确保值是数组
+    const ensureArray = (value: any): string[] => {
+      if (!value) return [];
+      return Array.isArray(value) ? value : [value];
+    };
+    
     Object.values(mealPlans).forEach((plan: any) => {
       if (!plan.date) return;
       
       const date = new Date(plan.date);
       
-      if (plan.breakfast && recipesMap.has(plan.breakfast)) {
-        const recipe = recipesMap.get(plan.breakfast);
-        if (recipe) {
-          const breakfastStart = new Date(date);
-          breakfastStart.setHours(7, 0, 0, 0);
-          
-          const breakfastEnd = new Date(date);
-          breakfastEnd.setHours(9, 0, 0, 0);
-          
-          newEvents.push({
-            id: `breakfast-${plan.date}`,
-            title: `早餐: ${recipe.title}`,
-            start: breakfastStart,
-            end: breakfastEnd,
-            color: 'red',
-          });
+      // 处理早餐
+      const breakfastIds = ensureArray(plan.breakfast);
+      breakfastIds.forEach((id, index) => {
+        if (recipesMap.has(id)) {
+          const recipe = recipesMap.get(id);
+          if (recipe) {
+            const breakfastStart = new Date(date);
+            breakfastStart.setHours(7, 0, 0, 0);
+            
+            const breakfastEnd = new Date(date);
+            breakfastEnd.setHours(9, 0, 0, 0);
+            
+            newEvents.push({
+              id: `breakfast-${plan.date}-${id}`,
+              title: `早餐: ${recipe.title}`,
+              start: breakfastStart,
+              end: breakfastEnd,
+              color: 'red',
+            });
+          }
         }
-      }
+      });
       
-      if (plan.lunch && recipesMap.has(plan.lunch)) {
-        const recipe = recipesMap.get(plan.lunch);
-        if (recipe) {
-          const lunchStart = new Date(date);
-          lunchStart.setHours(12, 0, 0, 0);
-          
-          const lunchEnd = new Date(date);
-          lunchEnd.setHours(14, 0, 0, 0);
-          
-          newEvents.push({
-            id: `lunch-${plan.date}`,
-            title: `午餐: ${recipe.title}`,
-            start: lunchStart,
-            end: lunchEnd,
-            color: 'green',
-          });
+      // 处理午餐
+      const lunchIds = ensureArray(plan.lunch);
+      lunchIds.forEach((id, index) => {
+        if (recipesMap.has(id)) {
+          const recipe = recipesMap.get(id);
+          if (recipe) {
+            const lunchStart = new Date(date);
+            lunchStart.setHours(12, 0, 0, 0);
+            
+            const lunchEnd = new Date(date);
+            lunchEnd.setHours(14, 0, 0, 0);
+            
+            newEvents.push({
+              id: `lunch-${plan.date}-${id}`,
+              title: `午餐: ${recipe.title}`,
+              start: lunchStart,
+              end: lunchEnd,
+              color: 'green',
+            });
+          }
         }
-      }
+      });
       
-      if (plan.dinner && recipesMap.has(plan.dinner)) {
-        const recipe = recipesMap.get(plan.dinner);
-        if (recipe) {
-          const dinnerStart = new Date(date);
-          dinnerStart.setHours(18, 0, 0, 0);
-          
-          const dinnerEnd = new Date(date);
-          dinnerEnd.setHours(20, 0, 0, 0);
-          
-          newEvents.push({
-            id: `dinner-${plan.date}`,
-            title: `晚餐: ${recipe.title}`,
-            start: dinnerStart,
-            end: dinnerEnd,
-            color: 'blue',
-          });
+      // 处理晚餐
+      const dinnerIds = ensureArray(plan.dinner);
+      dinnerIds.forEach((id, index) => {
+        if (recipesMap.has(id)) {
+          const recipe = recipesMap.get(id);
+          if (recipe) {
+            const dinnerStart = new Date(date);
+            dinnerStart.setHours(18, 0, 0, 0);
+            
+            const dinnerEnd = new Date(date);
+            dinnerEnd.setHours(20, 0, 0, 0);
+            
+            newEvents.push({
+              id: `dinner-${plan.date}-${id}`,
+              title: `晚餐: ${recipe.title}`,
+              start: dinnerStart,
+              end: dinnerEnd,
+              color: 'blue',
+            });
+          }
         }
-      }
+      });
     });
     
     setEvents(newEvents);
@@ -156,30 +174,43 @@ export default function MealPlanningPage() {
     if (!selectedDate || !mealPlanningService) return;
     
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    const updatedPlan = mealPlanningService.setMealPlan(dateStr, mealType, recipeId);
+    const updatedPlan = mealPlanningService.addRecipeToMeal(dateStr, mealType, recipeId);
     setSelectedMealPlan(updatedPlan);
     
     // 重新加载日历事件
     loadMealEvents();
   };
   
-  // 移除食谱
-  const removeRecipe = (mealType: 'breakfast' | 'lunch' | 'dinner') => {
+  // 从餐食中移除单个食谱
+  const removeRecipe = (mealType: 'breakfast' | 'lunch' | 'dinner', recipeId: string) => {
     if (!selectedDate || !mealPlanningService) return;
     
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
-    const updatedPlan = mealPlanningService.setMealPlan(dateStr, mealType, null);
+    const updatedPlan = mealPlanningService.removeRecipeFromMeal(dateStr, mealType, recipeId);
     setSelectedMealPlan(updatedPlan);
     
     // 重新加载日历事件
     loadMealEvents();
   };
   
-  // 获取指定餐食的食谱详情
-  const getMealRecipe = (mealType: 'breakfast' | 'lunch' | 'dinner'): Recipe | null => {
-    if (!selectedMealPlan || !selectedMealPlan[mealType] || !recipeService) return null;
+  // 获取指定餐食的所有食谱详情
+  const getMealRecipes = (mealType: 'breakfast' | 'lunch' | 'dinner'): Recipe[] => {
+    if (!selectedMealPlan || !selectedMealPlan[mealType] || !recipeService) return [];
     
-    return recipeService.getRecipe(selectedMealPlan[mealType]!);
+    // 确保是数组
+    const recipeIds = Array.isArray(selectedMealPlan[mealType]) 
+      ? selectedMealPlan[mealType] as string[]
+      : [selectedMealPlan[mealType]] as string[];
+    
+    // 获取所有有效的食谱对象
+    return recipeIds
+      .map(id => {
+        if (recipeService) {
+          return recipeService.getRecipe(id);
+        }
+        return null;
+      })
+      .filter((recipe): recipe is Recipe => recipe !== null);
   };
   
   return (
@@ -256,28 +287,25 @@ export default function MealPlanningPage() {
             <MealSection 
               title="早餐" 
               mealType="breakfast"
-              recipe={getMealRecipe('breakfast')}
-              recipes={recipes}
+              recipes={getMealRecipes('breakfast')}
               onAssign={(recipeId) => assignRecipe('breakfast', recipeId)}
-              onRemove={() => removeRecipe('breakfast')}
+              onRemove={(recipeId) => removeRecipe('breakfast', recipeId)}
             />
             
             <MealSection 
               title="午餐" 
               mealType="lunch"
-              recipe={getMealRecipe('lunch')}
-              recipes={recipes}
+              recipes={getMealRecipes('lunch')}
               onAssign={(recipeId) => assignRecipe('lunch', recipeId)}
-              onRemove={() => removeRecipe('lunch')}
+              onRemove={(recipeId) => removeRecipe('lunch', recipeId)}
             />
             
             <MealSection 
               title="晚餐" 
               mealType="dinner"
-              recipe={getMealRecipe('dinner')}
-              recipes={recipes}
+              recipes={getMealRecipes('dinner')}
               onAssign={(recipeId) => assignRecipe('dinner', recipeId)}
-              onRemove={() => removeRecipe('dinner')}
+              onRemove={(recipeId) => removeRecipe('dinner', recipeId)}
             />
           </div>
           
@@ -294,13 +322,20 @@ export default function MealPlanningPage() {
 interface MealSectionProps {
   title: string;
   mealType: 'breakfast' | 'lunch' | 'dinner';
-  recipe: Recipe | null;
   recipes: Recipe[];
   onAssign: (recipeId: string) => void;
-  onRemove: () => void;
+  onRemove: (recipeId: string) => void;
 }
 
-function MealSection({ title, mealType, recipe, recipes, onAssign, onRemove }: MealSectionProps) {
+function MealSection({ title, mealType, recipes: mealRecipes, onAssign, onRemove }: MealSectionProps) {
+  const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
+  
+  useEffect(() => {
+    if (recipeService) {
+      setAllRecipes(recipeService.getAllRecipes());
+    }
+  }, []);
+  
   return (
     <div className="border rounded-lg p-4">
       <div className="flex justify-between items-center mb-3">
@@ -308,7 +343,7 @@ function MealSection({ title, mealType, recipe, recipes, onAssign, onRemove }: M
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm">
-              {recipe ? '更换食谱' : '添加食谱'}
+              添加食谱
             </Button>
           </SheetTrigger>
           <SheetContent>
@@ -319,8 +354,8 @@ function MealSection({ title, mealType, recipe, recipes, onAssign, onRemove }: M
               </SheetDescription>
             </SheetHeader>
             <div className="mt-4 space-y-2 overflow-auto h-[calc(100vh-200px)]">
-              {recipes.length > 0 ? (
-                recipes.map(item => (
+              {allRecipes.length > 0 ? (
+                allRecipes.map(item => (
                   <Button
                     key={item.id}
                     variant="outline"
@@ -352,15 +387,19 @@ function MealSection({ title, mealType, recipe, recipes, onAssign, onRemove }: M
         </Sheet>
       </div>
       
-      {recipe ? (
-        <div className="space-y-2">
-          <div className="text-sm font-medium">{recipe.title}</div>
-          <div className="text-xs text-gray-500">{recipe.description}</div>
-          <div className="flex justify-end">
-            <Button variant="ghost" size="sm" onClick={onRemove}>
-              移除
-            </Button>
-          </div>
+      {mealRecipes.length > 0 ? (
+        <div className="space-y-4">
+          {mealRecipes.map(recipe => (
+            <div key={recipe.id} className="p-3 border rounded-md">
+              <div className="text-sm font-medium">{recipe.title}</div>
+              <div className="text-xs text-gray-500 mt-1">{recipe.description}</div>
+              <div className="flex justify-end mt-2">
+                <Button variant="ghost" size="sm" onClick={() => onRemove(recipe.id)}>
+                  移除
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="h-16 flex items-center justify-center text-gray-400 text-sm">

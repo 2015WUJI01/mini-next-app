@@ -603,7 +603,7 @@ export function CalendarMonthView({
                   </div>
                 </div>
                 <div className="space-y-1 w-full">
-                  {dayEvents.slice(0, 3).map((event) => (
+                  {dayEvents.slice(0, 5).map((event) => (
                     <div
                       key={event.id}
                       className={cn(
@@ -621,9 +621,9 @@ export function CalendarMonthView({
                       {event.title}
                     </div>
                   ))}
-                  {dayEvents.length > 3 && (
+                  {dayEvents.length > 5 && (
                     <div className="text-xs text-muted-foreground">
-                      + {dayEvents.length - 3} more
+                      + {dayEvents.length - 5} more
                     </div>
                   )}
                   {dayEvents.length === 0 && <div className="h-4"></div>}
