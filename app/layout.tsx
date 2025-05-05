@@ -1,8 +1,8 @@
 import "@/app/globals.css"
 
 export const metadata = {
-  title: '狼人杀发牌器',
-  description: '狼人杀发牌器',
+  title: 'Hello world',
+  description: 'Hello world',
 }
 
 export default function RootLayout({
