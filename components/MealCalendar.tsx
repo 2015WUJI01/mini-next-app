@@ -55,7 +55,16 @@ export function MealCalendar() {
   const getMealRecipe = (mealType: 'breakfast' | 'lunch' | 'dinner'): Recipe | null => {
     if (!selectedMealPlan || !selectedMealPlan[mealType] || !recipeService) return null;
     
-    return recipeService.getRecipe(selectedMealPlan[mealType]!);
+    // 获取mealType对应的value，可能是字符串或字符串数组
+    const mealValue = selectedMealPlan[mealType];
+    
+    // 如果是数组，取第一个元素；如果是字符串，直接使用
+    const recipeId = Array.isArray(mealValue) ? mealValue[0] : mealValue;
+    
+    // 确保recipeId存在
+    if (!recipeId) return null;
+    
+    return recipeService.getRecipe(recipeId);
   };
   
   // 自定义日历日期渲染

@@ -2,14 +2,15 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RecipeForm, RecipeFormData } from "@/components/RecipeForm";
 import { recipeService } from "@/lib/recipes";
 import { toast } from "@/components/ui/use-toast";
 
-export default function NewRecipePage() {
+// 内部组件用于使用searchParams
+function RecipeFormContainer() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nameParam = searchParams.get('name');
@@ -63,6 +64,17 @@ export default function NewRecipePage() {
   };
   
   return (
+    <RecipeForm
+      initialData={initialData}
+      onSubmit={handleSubmit}
+      submitLabel="保存食谱"
+    />
+  );
+}
+
+// 主页面组件
+export default function NewRecipePage() {
+  return (
     <div className="container mx-auto py-10">
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
@@ -70,11 +82,9 @@ export default function NewRecipePage() {
           <CardDescription>记录你喜爱的菜肴制作步骤和所需食材</CardDescription>
         </CardHeader>
         <CardContent>
-          <RecipeForm
-            initialData={initialData}
-            onSubmit={handleSubmit}
-            submitLabel="保存食谱"
-          />
+          <Suspense fallback={<div>加载中...</div>}>
+            <RecipeFormContainer />
+          </Suspense>
         </CardContent>
         <CardFooter className="flex justify-start">
           <Button variant="outline" asChild>
