@@ -112,15 +112,18 @@ export function ExportImportData() {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-xl font-semibold">数据导入导出</h2>
+    <div className="flex flex-col gap-3 max-w-full">
+      <h3 className="text-sm font-medium mb-1">数据管理</h3>
       
       {/* 导出数据对话框 */}
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline">导出所有数据</Button>
+          <Button size="sm" variant="outline" className="w-full justify-start overflow-hidden">
+            <span className="mr-2 flex-shrink-0">📤</span>
+            <span className="truncate">导出所有数据</span>
+          </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] max-w-[95vw] overflow-hidden">
           <DialogHeader>
             <DialogTitle>导出数据</DialogTitle>
             <DialogDescription>
@@ -129,7 +132,7 @@ export function ExportImportData() {
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
+            <div className="grid grid-cols-4 items-center gap-2">
               <Label htmlFor="exportFilename" className="text-right">
                 文件名
               </Label>
@@ -142,7 +145,7 @@ export function ExportImportData() {
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-wrap gap-2">
             <DialogClose asChild>
               <Button variant="outline">取消</Button>
             </DialogClose>
@@ -156,9 +159,12 @@ export function ExportImportData() {
       {/* 导入数据对话框 */}
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="outline">导入数据</Button>
+          <Button size="sm" variant="outline" className="w-full justify-start overflow-hidden">
+            <span className="mr-2 flex-shrink-0">📥</span>
+            <span className="truncate">导入数据</span>
+          </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] max-w-[95vw] overflow-hidden">
           <DialogHeader>
             <DialogTitle>导入数据</DialogTitle>
             <DialogDescription>
@@ -167,8 +173,8 @@ export function ExportImportData() {
           </DialogHeader>
           
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="importFile" className="text-right">
+            <div className="grid sm:grid-cols-4 grid-cols-1 items-center gap-2">
+              <Label htmlFor="importFile" className="sm:text-right">
                 选择文件
               </Label>
               <Input
@@ -176,18 +182,18 @@ export function ExportImportData() {
                 type="file"
                 accept=".json"
                 ref={fileInputRef}
-                className="col-span-3"
+                className="sm:col-span-3"
                 onChange={handleFileChange}
               />
             </div>
             {selectedFile && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 truncate">
                 已选择: {selectedFile.name}
               </p>
             )}
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-wrap gap-2">
             <DialogClose asChild>
               <Button variant="outline">取消</Button>
             </DialogClose>
@@ -199,14 +205,14 @@ export function ExportImportData() {
                   {isImporting ? '导入中...' : '导入'}
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent>
+              <AlertDialogContent className="max-w-[95vw]">
                 <AlertDialogHeader>
                   <AlertDialogTitle>确认导入数据</AlertDialogTitle>
                   <AlertDialogDescription>
                     此操作将覆盖您当前的所有食谱和饮食编排数据。此操作不可撤销。确定要继续吗？
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
+                <AlertDialogFooter className="flex-wrap gap-2">
                   <AlertDialogCancel>取消</AlertDialogCancel>
                   <AlertDialogAction onClick={handleImport}>
                     确认导入

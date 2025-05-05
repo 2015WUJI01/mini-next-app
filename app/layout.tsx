@@ -1,6 +1,6 @@
 import "@/app/globals.css"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+import { MainNav } from "@/components/MainNav"
+import { Toaster } from "@/components/ui/toaster"
 
 export const metadata = {
   title: '健康饮食管理',
@@ -13,24 +13,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="zh-CN">
-      <body className="min-h-screen bg-background font-sans antialiased">
-        <header className="border-b">
-          <div className="container mx-auto py-3 flex items-center justify-between">
-            <Link href="/" className="text-xl font-semibold">
-              健康饮食管理
-            </Link>
-            <nav className="flex items-center space-x-4">
-              <Button variant="ghost" asChild>
-                <Link href="/recipes">食谱记录</Link>
-              </Button>
-              <Button variant="ghost" asChild>
-                <Link href="/meal-planning">饮食编排</Link>
-              </Button>
-            </nav>
-          </div>
+    <html lang="zh-CN" className="overflow-x-hidden">
+      <body className="min-h-screen bg-background font-sans antialiased overflow-x-hidden">
+        <header className="border-b w-full">
+          <MainNav />
         </header>
-        <main>{children}</main>
+        <main className="flex-1 w-full">{children}</main>
+        <Toaster />
       </body>
     </html>
   )
