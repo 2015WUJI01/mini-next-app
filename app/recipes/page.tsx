@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { RecipeCard } from "@/components/RecipeCard";
+import { RecipeSearch } from "@/components/RecipeSearch";
 import { useState } from "react";
 
 // 示例数据
@@ -32,11 +33,14 @@ export default function RecipesPage() {
   
   return (
     <div className="container mx-auto py-10">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">我的食谱</h1>
-        <Button asChild>
-          <Link href="/recipes/new">添加新食谱</Link>
-        </Button>
+        <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <RecipeSearch />
+          <Button asChild>
+            <Link href="/recipes/new">添加新食谱</Link>
+          </Button>
+        </div>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
