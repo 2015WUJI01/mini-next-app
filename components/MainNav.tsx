@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 export function MainNav() {
   return (
-    <div className="container mx-auto py-2 md:py-3 px-4 flex flex-wrap items-center justify-between">
+    <div className="w-full max-w-screen-xl mx-auto py-2 md:py-3 px-4 flex flex-wrap items-center justify-between">
       <Link href="/" className="text-xl font-semibold py-2">
         健康饮食管理
       </Link>
