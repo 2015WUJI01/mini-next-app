@@ -229,7 +229,7 @@ export default function MealPlanningPage() {
           defaultView="month"
           visibleViews={['month']}
         >
-          <div className="h-[calc(100vh-250px)] flex flex-col">
+          <div className="h-[calc(100vh-257px)] flex flex-col">
             <div className="flex px-2 items-center gap-2 mb-6">
               <CalendarViewTrigger className="aria-[current=true]:bg-accent" view="day">
                 日视图
