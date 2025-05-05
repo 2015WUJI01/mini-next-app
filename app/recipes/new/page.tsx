@@ -6,6 +6,8 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { RecipeForm, RecipeFormData } from "@/components/RecipeForm";
+import { recipeService } from "@/lib/recipes";
+import { toast } from "@/components/ui/use-toast";
 
 export default function NewRecipePage() {
   const router = useRouter();
@@ -30,11 +32,34 @@ export default function NewRecipePage() {
   }, [nameParam]);
   
   const handleSubmit = (data: RecipeFormData) => {
-    // 在实际应用中，这里会是一个API调用来保存数据
-    console.log('新建食谱数据:', data);
+    if (!recipeService) {
+      toast({
+        title: "保存失败",
+        description: "服务不可用，请稍后重试",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    // 保存成功后重定向到食谱列表
-    router.push('/recipes');
+    try {
+      // 使用RecipeService保存数据
+      const newRecipe = recipeService.addRecipe(data);
+      
+      toast({
+        title: "保存成功",
+        description: `食谱"${newRecipe.title}"已成功保存`
+      });
+      
+      // 保存成功后重定向到食谱详情页
+      router.push(`/recipes/${newRecipe.id}`);
+    } catch (error: any) {
+      console.error('保存食谱失败:', error);
+      toast({
+        title: "保存失败",
+        description: error.message || "无法保存食谱，请稍后重试",
+        variant: "destructive"
+      });
+    }
   };
   
   return (
