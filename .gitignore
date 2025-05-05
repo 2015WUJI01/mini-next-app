@@ -28,3 +28,5 @@ next-env.d.ts
 
 # ide
 .vscode
+
+ecosystem.config.js
