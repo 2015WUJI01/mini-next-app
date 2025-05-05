@@ -19,7 +19,11 @@ export default function RootLayout({
           <header className="border-b w-full">
             <MainNav />
           </header>
-          <main className="flex-1 w-full flex flex-col">{children}</main>
+          <main className="flex-1 w-full flex flex-col">
+            <div className="container py-8 px-4 mx-auto max-w-5xl">
+              {children}
+            </div>
+          </main>
           <Toaster />
         </div>
       </body>

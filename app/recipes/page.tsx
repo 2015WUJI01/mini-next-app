@@ -74,7 +74,7 @@ export default function RecipesPage() {
   };
   
   return (
-    <div className="container mx-auto py-10">
+    <>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <h1 className="text-3xl font-bold">我的食谱</h1>
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
@@ -110,6 +110,6 @@ export default function RecipesPage() {
           )}
         </div>
       )}
-    </div>
+    </>
   );
 } 

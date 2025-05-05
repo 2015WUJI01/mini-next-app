@@ -214,7 +214,7 @@ export default function MealPlanningPage() {
   };
   
   return (
-    <div className="container mx-auto py-10">
+    <>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">饮食编排</h1>
         <Button asChild>
@@ -314,7 +314,7 @@ export default function MealPlanningPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }
 

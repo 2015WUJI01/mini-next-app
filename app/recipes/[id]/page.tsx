@@ -46,94 +46,88 @@ export default function RecipeDetailPage() {
   
   if (isLoading) {
     return (
-      <div className="container mx-auto py-10">
-        <div className="flex justify-center items-center h-40">
-          <p className="text-gray-500">加载中...</p>
-        </div>
+      <div className="flex justify-center items-center h-40">
+        <p className="text-gray-500">加载中...</p>
       </div>
     );
   }
   
   if (!recipe) {
     return (
-      <div className="container mx-auto py-10">
-        <Card className="max-w-3xl mx-auto">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center h-40">
-              <p className="text-gray-500 mb-4">未找到该食谱</p>
-              <Button asChild>
-                <Link href="/recipes">返回食谱列表</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="max-w-3xl mx-auto">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center h-40">
+            <p className="text-gray-500 mb-4">未找到该食谱</p>
+            <Button asChild>
+              <Link href="/recipes">返回食谱列表</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
   
   return (
-    <div className="container mx-auto py-10">
-      <Card className="max-w-3xl mx-auto">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-2xl">{recipe.title}</CardTitle>
-              <CardDescription className="mt-2">{recipe.description}</CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/recipes/${recipe.id}/edit`}>编辑</Link>
-              </Button>
-              
-              <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm">删除</Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>确认删除</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      确定要删除食谱"{recipe.title}"吗？此操作不可撤销。
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>取消</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete}>
-                      删除
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
+    <Card className="max-w-3xl mx-auto">
+      <CardHeader>
+        <div className="flex justify-between items-start">
           <div>
-            <h3 className="text-lg font-medium mb-3">食材</h3>
-            <ul className="list-disc pl-5 space-y-1">
-              {recipe.ingredients.map((ingredient: string, index: number) => (
-                <li key={index} className="text-gray-700">{ingredient}</li>
-              ))}
-            </ul>
+            <CardTitle className="text-2xl">{recipe.title}</CardTitle>
+            <CardDescription className="mt-2">{recipe.description}</CardDescription>
           </div>
-          
-          <div>
-            <h3 className="text-lg font-medium mb-3">烹饪步骤</h3>
-            <ol className="list-decimal pl-5 space-y-4">
-              {recipe.steps.map((step: string, index: number) => (
-                <li key={index} className="text-gray-700">
-                  <p>{step}</p>
-                </li>
-              ))}
-            </ol>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/recipes/${recipe.id}/edit`}>编辑</Link>
+            </Button>
+            
+            <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm">删除</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>确认删除</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    确定要删除食谱"{recipe.title}"吗？此操作不可撤销。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDelete}>
+                    删除
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button asChild>
-            <Link href="/recipes">返回食谱列表</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium mb-3">食材</h3>
+          <ul className="list-disc pl-5 space-y-1">
+            {recipe.ingredients.map((ingredient: string, index: number) => (
+              <li key={index} className="text-gray-700">{ingredient}</li>
+            ))}
+          </ul>
+        </div>
+        
+        <div>
+          <h3 className="text-lg font-medium mb-3">烹饪步骤</h3>
+          <ol className="list-decimal pl-5 space-y-4">
+            {recipe.steps.map((step: string, index: number) => (
+              <li key={index} className="text-gray-700">
+                <p>{step}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </CardContent>
+      <CardFooter className="flex justify-between">
+        <Button asChild>
+          <Link href="/recipes">返回食谱列表</Link>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 } 

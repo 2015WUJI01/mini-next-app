@@ -68,51 +68,45 @@ export default function EditRecipePage() {
   
   if (isLoading) {
     return (
-      <div className="container mx-auto py-10">
-        <div className="flex justify-center items-center h-40">
-          <p className="text-gray-500">加载中...</p>
-        </div>
+      <div className="flex justify-center items-center h-40">
+        <p className="text-gray-500">加载中...</p>
       </div>
     );
   }
   
   if (!recipeData) {
     return (
-      <div className="container mx-auto py-10">
-        <Card className="max-w-3xl mx-auto">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center justify-center h-40">
-              <p className="text-gray-500 mb-4">未找到该食谱</p>
-              <Button asChild>
-                <Link href="/recipes">返回食谱列表</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card className="max-w-3xl mx-auto">
+        <CardContent className="pt-6">
+          <div className="flex flex-col items-center justify-center h-40">
+            <p className="text-gray-500 mb-4">未找到该食谱</p>
+            <Button asChild>
+              <Link href="/recipes">返回食谱列表</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     );
   }
   
   return (
-    <div className="container mx-auto py-10">
-      <Card className="max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle>编辑食谱</CardTitle>
-          <CardDescription>修改你的食谱信息</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RecipeForm 
-            initialData={recipeData}
-            onSubmit={handleSubmit}
-            submitLabel="保存修改"
-          />
-        </CardContent>
-        <CardFooter className="flex justify-start">
-          <Button variant="outline" asChild>
-            <Link href={`/recipes/${id}`}>取消</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+    <Card className="max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle>编辑食谱</CardTitle>
+        <CardDescription>修改你的食谱信息</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <RecipeForm 
+          initialData={recipeData}
+          onSubmit={handleSubmit}
+          submitLabel="保存修改"
+        />
+      </CardContent>
+      <CardFooter className="flex justify-start">
+        <Button variant="outline" asChild>
+          <Link href={`/recipes/${id}`}>取消</Link>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 } 

@@ -152,7 +152,7 @@ export default function DataManagementPage() {
   };
 
   return (
-    <div className="container py-8 px-4 mx-auto max-w-5xl">
+    <>
       <h1 className="text-3xl font-bold mb-8">数据管理</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -277,6 +277,6 @@ export default function DataManagementPage() {
           清除浏览器数据会导致数据丢失。建议定期导出数据以防数据丢失。
         </p>
       </div>
-    </div>
+    </>
   );
 } 

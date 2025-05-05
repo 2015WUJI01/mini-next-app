@@ -75,23 +75,21 @@ function RecipeFormContainer() {
 // 主页面组件
 export default function NewRecipePage() {
   return (
-    <div className="container mx-auto py-10">
-      <Card className="max-w-3xl mx-auto">
-        <CardHeader>
-          <CardTitle>创建新食谱</CardTitle>
-          <CardDescription>记录你喜爱的菜肴制作步骤和所需食材</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<div>加载中...</div>}>
-            <RecipeFormContainer />
-          </Suspense>
-        </CardContent>
-        <CardFooter className="flex justify-start">
-          <Button variant="outline" asChild>
-            <Link href="/recipes">取消</Link>
-          </Button>
-        </CardFooter>
-      </Card>
-    </div>
+    <Card className="max-w-3xl mx-auto">
+      <CardHeader>
+        <CardTitle>创建新食谱</CardTitle>
+        <CardDescription>记录你喜爱的菜肴制作步骤和所需食材</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Suspense fallback={<div>加载中...</div>}>
+          <RecipeFormContainer />
+        </Suspense>
+      </CardContent>
+      <CardFooter className="flex justify-start">
+        <Button variant="outline" asChild>
+          <Link href="/recipes">取消</Link>
+        </Button>
+      </CardFooter>
+    </Card>
   );
 } 
