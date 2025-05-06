@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Coffee, Utensils, Moon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coffee, Utensils, Moon, Search } from "lucide-react";
 import { Recipe, recipeService } from "@/lib/recipes";
 import { MealPlan, mealPlanningService } from "@/lib/meal-planning";
 import { zhCN } from "date-fns/locale";
@@ -39,12 +39,15 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
+import { SearchInput, SearchableItem } from "@/components/ui/search-input";
 
 // 扩展 CalendarEvent 类型
 interface ExtendedCalendarEvent extends CalendarEvent {
@@ -342,12 +345,42 @@ interface MealSectionProps {
 
 function MealSection({ title, mealType, recipes: mealRecipes, onAssign, onRemove }: MealSectionProps) {
   const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
+  const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
   
   useEffect(() => {
     if (recipeService) {
-      setAllRecipes(recipeService.getAllRecipes());
+      const recipes = recipeService.getAllRecipes();
+      setAllRecipes(recipes);
+      setFilteredRecipes(recipes);
     }
   }, []);
+
+  // 初始化已选中的食谱
+  useEffect(() => {
+    const selected = new Set(mealRecipes.map(recipe => recipe.id));
+    setSelectedRecipes(selected);
+  }, [mealRecipes]);
+
+  // 处理复选框变化
+  const handleCheckboxChange = (recipeId: string, checked: boolean) => {
+    const newSelected = new Set(selectedRecipes);
+    if (checked) {
+      newSelected.add(recipeId);
+    } else {
+      newSelected.delete(recipeId);
+    }
+    setSelectedRecipes(newSelected);
+  };
+
+  // 批量添加选中的食谱
+  const handleBatchAssign = () => {
+    selectedRecipes.forEach(recipeId => {
+      if (!mealRecipes.some(recipe => recipe.id === recipeId)) {
+        onAssign(recipeId);
+      }
+    });
+  };
   
   return (
     <div className="border rounded-lg p-4">
@@ -356,40 +389,61 @@ function MealSection({ title, mealType, recipes: mealRecipes, onAssign, onRemove
         <Sheet>
           <SheetTrigger asChild>
             <Button variant="outline" size="sm">
-              添加食谱
+              选择食谱
             </Button>
           </SheetTrigger>
           <SheetContent>
             <SheetHeader>
               <SheetTitle>选择{title}食谱</SheetTitle>
               <SheetDescription>
-                从你的食谱库中选择一个食谱作为{title}
+                勾选要添加的食谱，可以一次选择多个
               </SheetDescription>
             </SheetHeader>
-            <div className="mt-4 space-y-2 overflow-auto h-[calc(100vh-200px)]">
-              {allRecipes.length > 0 ? (
-                allRecipes.map(item => (
-                  <Button
-                    key={item.id}
-                    variant="outline"
-                    className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => {
-                      onAssign(item.id);
-                      const closeButton = document.querySelector('button[data-state="open"]') as HTMLButtonElement;
-                      closeButton?.click();
-                    }}
-                  >
-                    <div>
-                      <div className="font-medium">{item.title}</div>
-                      <div className="text-xs text-gray-500 mt-1">{item.ingredients.length} 种食材</div>
-                    </div>
-                  </Button>
-                ))
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  暂无食谱，请先添加食谱
-                </div>
-              )}
+            <div className="mt-4 space-y-4">
+              <SearchInput
+                items={allRecipes}
+                onSearch={setFilteredRecipes}
+                placeholder="搜索食谱..."
+                searchFields={['title', 'description', 'ingredients']}
+              />
+              <div className="space-y-2 overflow-auto h-[calc(100vh-280px)]">
+                {filteredRecipes.length > 0 ? (
+                  <div className="flex flex-col gap-2">
+                    {filteredRecipes.map(item => (
+                      <div key={item.id} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent">
+                        <Checkbox
+                          id={`recipe-${item.id}`}
+                          checked={selectedRecipes.has(item.id)}
+                          onCheckedChange={(checked) => handleCheckboxChange(item.id, checked as boolean)}
+                        />
+                        <label
+                          htmlFor={`recipe-${item.id}`}
+                          className="flex-1 cursor-pointer"
+                        >
+                          <div className="font-medium">{item.title}</div>
+                          <div className="text-xs text-gray-500 mt-1">{item.ingredients.length} 种食材</div>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    没有找到匹配的食谱
+                  </div>
+                )}
+              </div>
+              <div className="sticky bottom-0 bg-background p-4 border-t">
+                <Button 
+                  className="w-full" 
+                  onClick={() => {
+                    handleBatchAssign();
+                    const closeButton = document.querySelector('button[data-state="open"]') as HTMLButtonElement;
+                    closeButton?.click();
+                  }}
+                >
+                  确认添加
+                </Button>
+              </div>
             </div>
             <SheetFooter className="mt-4">
               <Button variant="secondary" asChild>
