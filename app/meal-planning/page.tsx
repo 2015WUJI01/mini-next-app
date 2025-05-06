@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coffee, Utensils, Moon } from "lucide-react";
 import { Recipe, recipeService } from "@/lib/recipes";
 import { MealPlan, mealPlanningService } from "@/lib/meal-planning";
 import { zhCN } from "date-fns/locale";
@@ -39,10 +39,21 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+// 扩展 CalendarEvent 类型
+interface ExtendedCalendarEvent extends CalendarEvent {
+  mealType?: 'breakfast' | 'lunch' | 'dinner';
+}
 
 export default function MealPlanningPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [events, setEvents] = useState<ExtendedCalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlan | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -63,14 +74,13 @@ export default function MealPlanningPage() {
   const loadMealEvents = () => {
     if (!recipeService || !mealPlanningService) return;
     
-    // 读取本地存储中的饮食计划数据
     const mealPlansData = localStorage.getItem('mealPlans');
     const mealPlans = mealPlansData ? JSON.parse(mealPlansData) : {};
     
     const allRecipes = recipeService.getAllRecipes();
     const recipesMap = new Map(allRecipes.map(recipe => [recipe.id, recipe]));
     
-    const newEvents: CalendarEvent[] = [];
+    const newEvents: ExtendedCalendarEvent[] = [];
     
     // 辅助函数：确保值是数组
     const ensureArray = (value: any): string[] => {
@@ -97,10 +107,11 @@ export default function MealPlanningPage() {
             
             newEvents.push({
               id: `breakfast-${plan.date}-${id}`,
-              title: `早餐: ${recipe.title}`,
+              title: `☕ ${recipe.title}`,
               start: breakfastStart,
               end: breakfastEnd,
-              color: 'red',
+              color: 'yellow',
+              mealType: 'breakfast'
             });
           }
         }
@@ -120,10 +131,11 @@ export default function MealPlanningPage() {
             
             newEvents.push({
               id: `lunch-${plan.date}-${id}`,
-              title: `午餐: ${recipe.title}`,
+              title: `🍽️ ${recipe.title}`,
               start: lunchStart,
               end: lunchEnd,
               color: 'green',
+              mealType: 'lunch'
             });
           }
         }
@@ -143,10 +155,11 @@ export default function MealPlanningPage() {
             
             newEvents.push({
               id: `dinner-${plan.date}-${id}`,
-              title: `晚餐: ${recipe.title}`,
+              title: `🌙 ${recipe.title}`,
               start: dinnerStart,
               end: dinnerEnd,
-              color: 'blue',
+              color: 'indigo',
+              mealType: 'dinner'
             });
           }
         }
