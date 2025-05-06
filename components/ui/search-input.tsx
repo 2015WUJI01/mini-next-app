@@ -1,7 +1,7 @@
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { debounce } from "lodash-es";
+import { useState, useCallback } from "react";
+import { pinyin } from 'pinyin-pro';
 
 export interface SearchableItem {
   id: string;
@@ -14,20 +14,39 @@ interface SearchInputProps<T extends SearchableItem> {
   items: T[];
   onSearch: (filteredItems: T[]) => void;
   placeholder?: string;
-  searchFields?: (keyof T)[];
   className?: string;
   debounceMs?: number;
+}
+
+// 获取字符串的拼音首字母
+function getPinyinInitials(text: string): string {
+  try {
+    return pinyin(text, { pattern: 'first', toneType: 'none' }).replace(/\s+/g, '');
+  } catch (e) {
+    console.error('Pinyin conversion error:', e);
+    return '';
+  }
+}
+
+// 获取字符串的完整拼音
+function getPinyin(text: string): string {
+  try {
+    return pinyin(text, { pattern: 'pinyin', toneType: 'none' }).replace(/\s+/g, '');
+  } catch (e) {
+    console.error('Pinyin conversion error:', e);
+    return '';
+  }
 }
 
 export function SearchInput<T extends SearchableItem>({
   items,
   onSearch,
   placeholder = "搜索...",
-  searchFields = ['title', 'description'],
   className = "",
   debounceMs = 300,
 }: SearchInputProps<T>) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   const performSearch = useCallback((query: string) => {
     if (query.trim() === "") {
@@ -36,38 +55,44 @@ export function SearchInput<T extends SearchableItem>({
     }
 
     const searchQuery = query.toLowerCase();
-    const filtered = items.filter(item => 
-      searchFields.some(field => {
-        const value = item[field];
-        if (typeof value === 'string') {
-          return value.toLowerCase().includes(searchQuery);
-        }
-        if (Array.isArray(value)) {
-          return value.some((v: unknown) => 
-            typeof v === 'string' 
-              ? v.toLowerCase().includes(searchQuery)
-              : typeof v === 'object' && v !== null && 'name' in v
-                ? (v.name as string).toLowerCase().includes(searchQuery)
-                : false
-          );
-        }
-        return false;
-      })
-    );
+    console.log('Searching for:', searchQuery);
+
+    const filtered = items.filter(item => {
+      const title = item.title;
+      const lowerTitle = title.toLowerCase();
+      const pinyinInitials = getPinyinInitials(title).toLowerCase();
+      const pinyinFull = getPinyin(title).toLowerCase();
+
+      console.log('Title:', title);
+      console.log('Pinyin Initials:', pinyinInitials);
+      console.log('Pinyin Full:', pinyinFull);
+
+      return lowerTitle.includes(searchQuery) || 
+             pinyinInitials.includes(searchQuery) ||
+             pinyinFull.includes(searchQuery);
+    });
+
+    console.log('Filtered results:', filtered);
     onSearch(filtered);
-  }, [items, searchFields, onSearch]);
+  }, [items, onSearch]);
 
-  const debouncedSearch = useMemo(
-    () => debounce(performSearch, debounceMs),
-    [performSearch, debounceMs]
-  );
+  const handleSearch = useCallback((query: string) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
 
-  useEffect(() => {
-    debouncedSearch(searchQuery);
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [searchQuery, debouncedSearch]);
+    const newTimeoutId = setTimeout(() => {
+      performSearch(query);
+    }, debounceMs);
+
+    setTimeoutId(newTimeoutId);
+  }, [timeoutId, performSearch, debounceMs]);
+
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    handleSearch(value);
+  }, [handleSearch]);
 
   return (
     <div className={`relative ${className}`}>
@@ -75,7 +100,7 @@ export function SearchInput<T extends SearchableItem>({
       <Input
         placeholder={placeholder}
         value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        onChange={handleChange}
         className="pl-8"
       />
     </div>
