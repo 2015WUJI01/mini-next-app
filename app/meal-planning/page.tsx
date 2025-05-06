@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Coffee, Utensils, Moon, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Coffee, Utensils, Moon, Search, Sun } from "lucide-react";
 import { Recipe, recipeService } from "@/lib/recipes";
 import { MealPlan, mealPlanningService } from "@/lib/meal-planning";
 import { zhCN } from "date-fns/locale";
@@ -29,7 +29,7 @@ import {
   SheetTrigger,
   SheetFooter 
 } from "@/components/ui/sheet";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 import { 
   Dialog, 
   DialogContent, 
@@ -60,11 +60,39 @@ export default function MealPlanningPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlan | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [selectedMeals, setSelectedMeals] = useState<{
+    breakfast: string[];
+    lunch: string[];
+    dinner: string[];
+  }>({
+    breakfast: [],
+    lunch: [],
+    dinner: []
+  });
+  const [isQuickSelectMode, setIsQuickSelectMode] = useState(false);
+  const [tempMealPlan, setTempMealPlan] = useState<{
+    breakfast: string[];
+    lunch: string[];
+    dinner: string[];
+  }>({
+    breakfast: [],
+    lunch: [],
+    dinner: []
+  });
+  const [futureMealPlans, setFutureMealPlans] = useState<{
+    [key: string]: {
+      lunch: string[];
+      dinner: string[];
+    };
+  }>({});
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
 
   // 加载食谱数据
   useEffect(() => {
     if (recipeService) {
-      setRecipes(recipeService.getAllRecipes());
+      const allRecipes = recipeService.getAllRecipes();
+      setRecipes(allRecipes);
+      setFilteredRecipes(allRecipes);
     }
   }, []);
 
@@ -229,17 +257,145 @@ export default function MealPlanningPage() {
       .filter((recipe): recipe is Recipe => recipe !== null);
   };
   
-  return (
-    <>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">饮食编排</h1>
-        <Button asChild>
-          <Link href="/recipes">查看我的食谱</Link>
-        </Button>
-      </div>
+  // 处理食谱选择
+  const handleMealSelect = (mealType: 'breakfast' | 'lunch' | 'dinner', recipeId: string) => {
+    setSelectedMeals(prev => {
+      const currentMeals = prev[mealType];
+      const newMeals = currentMeals.includes(recipeId)
+        ? currentMeals.filter(id => id !== recipeId)
+        : [...currentMeals, recipeId];
       
-      <div className="bg-white p-6 rounded-lg shadow">
-        <Calendar 
+      return {
+        ...prev,
+        [mealType]: newMeals
+      };
+    });
+  };
+
+  // 保存膳食安排
+  const handleSaveMeals = () => {
+    if (!selectedDate || !mealPlanningService) return;
+    
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
+    
+    // 分别设置每个餐段的食谱
+    selectedMeals.breakfast.forEach(recipeId => {
+      mealPlanningService.setMealPlan(dateStr, 'breakfast', recipeId);
+    });
+    
+    selectedMeals.lunch.forEach(recipeId => {
+      mealPlanningService.setMealPlan(dateStr, 'lunch', recipeId);
+    });
+    
+    selectedMeals.dinner.forEach(recipeId => {
+      mealPlanningService.setMealPlan(dateStr, 'dinner', recipeId);
+    });
+    
+    const updatedPlan = {
+      date: dateStr,
+      breakfast: selectedMeals.breakfast,
+      lunch: selectedMeals.lunch,
+      dinner: selectedMeals.dinner
+    };
+    
+    setSelectedMealPlan(updatedPlan);
+    loadMealEvents();
+    setIsDialogOpen(false);
+  };
+
+  // 当打开对话框时，初始化已选择的食谱
+  useEffect(() => {
+    if (selectedMealPlan) {
+      setSelectedMeals({
+        breakfast: Array.isArray(selectedMealPlan.breakfast) ? selectedMealPlan.breakfast : [],
+        lunch: Array.isArray(selectedMealPlan.lunch) ? selectedMealPlan.lunch : [],
+        dinner: Array.isArray(selectedMealPlan.dinner) ? selectedMealPlan.dinner : []
+      });
+    }
+  }, [selectedMealPlan]);
+
+  // 处理快速选择模式下的食谱分配
+  const handleQuickAssign = (
+    recipeId: string, 
+    mealType: 'breakfast' | 'lunch' | 'dinner',
+    dateOffset: number = 0
+  ) => {
+    if (dateOffset === 0) {
+      // 当天分配
+      setTempMealPlan(prev => {
+        const currentMeals = prev[mealType];
+        const newMeals = currentMeals.includes(recipeId)
+          ? currentMeals.filter(id => id !== recipeId)
+          : [...currentMeals, recipeId];
+        
+        return {
+          ...prev,
+          [mealType]: newMeals
+        };
+      });
+    } else {
+      // 未来日期分配
+      const date = new Date(selectedDate!);
+      date.setDate(date.getDate() + dateOffset);
+      const dateStr = format(date, 'yyyy-MM-dd');
+      
+      setFutureMealPlans(prev => {
+        const currentPlan = prev[dateStr] || { lunch: [], dinner: [] };
+        const currentMeals = currentPlan[mealType];
+        const newMeals = currentMeals.includes(recipeId)
+          ? currentMeals.filter(id => id !== recipeId)
+          : [...currentMeals, recipeId];
+        
+        return {
+          ...prev,
+          [dateStr]: {
+            ...currentPlan,
+            [mealType]: newMeals
+          }
+        };
+      });
+    }
+  };
+
+  // 保存快速选择的食谱
+  const handleSaveQuickSelect = () => {
+    // 保存当天的计划
+    setSelectedMeals(tempMealPlan);
+    
+    // 保存未来日期的计划
+    Object.entries(futureMealPlans).forEach(([dateStr, plan]) => {
+      if (mealPlanningService) {
+        plan.lunch.forEach(recipeId => {
+          mealPlanningService.setMealPlan(dateStr, 'lunch', recipeId);
+        });
+        plan.dinner.forEach(recipeId => {
+          mealPlanningService.setMealPlan(dateStr, 'dinner', recipeId);
+        });
+      }
+    });
+    
+    setIsQuickSelectMode(false);
+    setFutureMealPlans({});
+  };
+
+  // 进入快速选择模式时初始化临时计划
+  useEffect(() => {
+    if (isQuickSelectMode) {
+      setTempMealPlan(selectedMeals);
+      setFilteredRecipes(recipes); // 重置搜索结果
+    }
+  }, [isQuickSelectMode, selectedMeals, recipes]);
+
+  // 处理快速选择模式下的搜索
+  const handleQuickSearch = (items: Recipe[]) => {
+    setFilteredRecipes(items);
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">膳食计划</h1>
+      <div className="bg-card rounded-lg shadow p-4">
+        <Calendar
           events={events} 
           locale={zhCN}
           defaultView="month"
@@ -287,190 +443,314 @@ export default function MealPlanningPage() {
         </Calendar>
       </div>
       
-      {/* 饮食编排对话框 */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
-            <DialogTitle>
-              {selectedDate && format(selectedDate, 'yyyy年MM月dd日')} 饮食安排
-            </DialogTitle>
-            <DialogDescription>
-              为这一天安排早餐、午餐和晚餐
-            </DialogDescription>
+            <DialogTitle>安排 {selectedDate?.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })} 的膳食</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <MealSection 
-              title="早餐" 
-              mealType="breakfast"
-              recipes={getMealRecipes('breakfast')}
-              onAssign={(recipeId) => assignRecipe('breakfast', recipeId)}
-              onRemove={(recipeId) => removeRecipe('breakfast', recipeId)}
-            />
-            
-            <MealSection 
-              title="午餐" 
-              mealType="lunch"
-              recipes={getMealRecipes('lunch')}
-              onAssign={(recipeId) => assignRecipe('lunch', recipeId)}
-              onRemove={(recipeId) => removeRecipe('lunch', recipeId)}
-            />
-            
-            <MealSection 
-              title="晚餐" 
-              mealType="dinner"
-              recipes={getMealRecipes('dinner')}
-              onAssign={(recipeId) => assignRecipe('dinner', recipeId)}
-              onRemove={(recipeId) => removeRecipe('dinner', recipeId)}
-            />
+          <div className="flex-1 overflow-y-auto pr-2">
+            {isQuickSelectMode ? (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <SearchInput
+                    items={recipes}
+                    onSearch={handleQuickSearch}
+                    placeholder="搜索食谱..."
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      handleSaveQuickSelect();
+                      setIsQuickSelectMode(false);
+                    }}
+                  >
+                    结束编排
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-[400px] overflow-y-auto">
+                  {filteredRecipes.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      没有可用的食谱
+                    </p>
+                  ) : (
+                    filteredRecipes.map(recipe => (
+                      <div
+                        key={recipe.id}
+                        className="flex items-center gap-2 p-2 rounded-lg border"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{recipe.title}</p>
+                          {recipe.description && (
+                            <p className="text-sm text-muted-foreground truncate">
+                              {recipe.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-8 w-8 ${
+                                    tempMealPlan.breakfast.includes(recipe.id)
+                                      ? "text-yellow-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                  onClick={() => handleQuickAssign(recipe.id, 'breakfast')}
+                                >
+                                  <Sun className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>今天早餐</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-8 w-8 ${
+                                    tempMealPlan.lunch.includes(recipe.id)
+                                      ? "text-orange-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                  onClick={() => handleQuickAssign(recipe.id, 'lunch')}
+                                >
+                                  <Utensils className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>今天午餐</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-8 w-8 ${
+                                    tempMealPlan.dinner.includes(recipe.id)
+                                      ? "text-blue-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                  onClick={() => handleQuickAssign(recipe.id, 'dinner')}
+                                >
+                                  <Moon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>今天晚餐</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <div className="w-px h-6 bg-border mx-1" />
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-8 w-8 ${
+                                    futureMealPlans[format(addDays(selectedDate!, 1), 'yyyy-MM-dd')]?.lunch.includes(recipe.id)
+                                      ? "text-orange-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                  onClick={() => handleQuickAssign(recipe.id, 'lunch', 1)}
+                                >
+                                  <Utensils className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>明天午餐</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                          
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-8 w-8 ${
+                                    futureMealPlans[format(addDays(selectedDate!, 1), 'yyyy-MM-dd')]?.dinner.includes(recipe.id)
+                                      ? "text-blue-500"
+                                      : "text-muted-foreground"
+                                  }`}
+                                  onClick={() => handleQuickAssign(recipe.id, 'dinner', 1)}
+                                >
+                                  <Moon className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>明天晚餐</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-sm font-medium text-muted-foreground">分餐段选择</h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setIsQuickSelectMode(true);
+                      setTempMealPlan(selectedMeals);
+                    }}
+                  >
+                    快速编排
+                  </Button>
+                </div>
+                <MealSection
+                  title="早餐"
+                  icon={Sun}
+                  color="text-yellow-500"
+                  recipes={recipes}
+                  selectedRecipes={selectedMeals.breakfast}
+                  onSelect={(id) => handleMealSelect('breakfast', id)}
+                />
+                <MealSection
+                  title="午餐"
+                  icon={Utensils}
+                  color="text-orange-500"
+                  recipes={recipes}
+                  selectedRecipes={selectedMeals.lunch}
+                  onSelect={(id) => handleMealSelect('lunch', id)}
+                />
+                <MealSection
+                  title="晚餐"
+                  icon={Moon}
+                  color="text-blue-500"
+                  recipes={recipes}
+                  selectedRecipes={selectedMeals.dinner}
+                  onSelect={(id) => handleMealSelect('dinner', id)}
+                />
+              </div>
+            )}
           </div>
           
-          <DialogFooter>
-            <Button onClick={() => setIsDialogOpen(false)}>完成</Button>
+          <DialogFooter className={`mt-4 pt-4 ${!isQuickSelectMode ? 'border-t' : ''}`}>
+            {!isQuickSelectMode && (
+              <>
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  取消
+                </Button>
+                <Button onClick={handleSaveMeals}>
+                  完成
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }
 
 // 单餐区域组件
 interface MealSectionProps {
   title: string;
-  mealType: 'breakfast' | 'lunch' | 'dinner';
+  icon: React.ElementType;
+  color: string;
   recipes: Recipe[];
-  onAssign: (recipeId: string) => void;
-  onRemove: (recipeId: string) => void;
+  selectedRecipes: string[];
+  onSelect: (recipeId: string) => void;
 }
 
-function MealSection({ title, mealType, recipes: mealRecipes, onAssign, onRemove }: MealSectionProps) {
-  const [allRecipes, setAllRecipes] = useState<Recipe[]>([]);
-  const [selectedRecipes, setSelectedRecipes] = useState<Set<string>>(new Set());
-  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
-  
+function MealSection({ 
+  title, 
+  icon: Icon, 
+  color, 
+  recipes, 
+  selectedRecipes, 
+  onSelect 
+}: MealSectionProps) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredRecipes, setFilteredRecipes] = useState(recipes);
+  const [isExpanded, setIsExpanded] = useState(false);
+
   useEffect(() => {
-    if (recipeService) {
-      const recipes = recipeService.getAllRecipes();
-      setAllRecipes(recipes);
+    if (searchQuery.trim() === "") {
       setFilteredRecipes(recipes);
-    }
-  }, []);
-
-  // 初始化已选中的食谱
-  useEffect(() => {
-    const selected = new Set(mealRecipes.map(recipe => recipe.id));
-    setSelectedRecipes(selected);
-  }, [mealRecipes]);
-
-  // 处理复选框变化
-  const handleCheckboxChange = (recipeId: string, checked: boolean) => {
-    const newSelected = new Set(selectedRecipes);
-    if (checked) {
-      newSelected.add(recipeId);
     } else {
-      newSelected.delete(recipeId);
+      const query = searchQuery.toLowerCase();
+      const filtered = recipes.filter(recipe => 
+        recipe.title.toLowerCase().includes(query) ||
+        recipe.description?.toLowerCase().includes(query) ||
+        recipe.ingredients.some(ing => 
+          typeof ing === 'string' 
+            ? ing.toLowerCase().includes(query)
+            : ing.name.toLowerCase().includes(query)
+        )
+      );
+      setFilteredRecipes(filtered);
     }
-    setSelectedRecipes(newSelected);
-  };
+  }, [searchQuery, recipes]);
 
-  // 批量添加选中的食谱
-  const handleBatchAssign = () => {
-    selectedRecipes.forEach(recipeId => {
-      if (!mealRecipes.some(recipe => recipe.id === recipeId)) {
-        onAssign(recipeId);
-      }
-    });
-  };
-  
   return (
-    <div className="border rounded-lg p-4">
-      <div className="flex justify-between items-center mb-3">
-        <h4 className="font-medium">{title}</h4>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" size="sm">
-              选择食谱
-            </Button>
-          </SheetTrigger>
-          <SheetContent>
-            <SheetHeader>
-              <SheetTitle>选择{title}食谱</SheetTitle>
-              <SheetDescription>
-                勾选要添加的食谱，可以一次选择多个
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-4 space-y-4">
-              <SearchInput
-                items={allRecipes}
-                onSearch={setFilteredRecipes}
-                placeholder="搜索食谱..."
-                searchFields={['title', 'description', 'ingredients']}
-              />
-              <div className="space-y-2 overflow-auto h-[calc(100vh-280px)]">
-                {filteredRecipes.length > 0 ? (
-                  <div className="flex flex-col gap-2">
-                    {filteredRecipes.map(item => (
-                      <div key={item.id} className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent">
-                        <Checkbox
-                          id={`recipe-${item.id}`}
-                          checked={selectedRecipes.has(item.id)}
-                          onCheckedChange={(checked) => handleCheckboxChange(item.id, checked as boolean)}
-                        />
-                        <label
-                          htmlFor={`recipe-${item.id}`}
-                          className="flex-1 cursor-pointer"
-                        >
-                          <div className="font-medium">{item.title}</div>
-                          <div className="text-xs text-gray-500 mt-1">{item.ingredients.length} 种食材</div>
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    没有找到匹配的食谱
-                  </div>
-                )}
-              </div>
-              <div className="sticky bottom-0 bg-background p-4 border-t">
-                <Button 
-                  className="w-full" 
-                  onClick={() => {
-                    handleBatchAssign();
-                    const closeButton = document.querySelector('button[data-state="open"]') as HTMLButtonElement;
-                    closeButton?.click();
-                  }}
-                >
-                  确认添加
-                </Button>
-              </div>
-            </div>
-            <SheetFooter className="mt-4">
-              <Button variant="secondary" asChild>
-                <Link href="/recipes/new">创建新食谱</Link>
-              </Button>
-            </SheetFooter>
-          </SheetContent>
-        </Sheet>
+    <div className="space-y-2">
+      <div 
+        className="flex items-center justify-between p-2 rounded-lg border cursor-pointer hover:bg-accent/50"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        <div className="flex items-center gap-2">
+          <Icon className={`h-5 w-5 ${color}`} />
+          <h3 className="font-medium">{title}</h3>
+          <span className="text-sm text-muted-foreground">
+            ({selectedRecipes.length} 个食谱)
+          </span>
+        </div>
+        <ChevronRight 
+          className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+        />
       </div>
       
-      {mealRecipes.length > 0 ? (
-        <div className="space-y-4">
-          {mealRecipes.map(recipe => (
-            <div key={recipe.id} className="p-3 border rounded-md">
-              <div className="text-sm font-medium">{recipe.title}</div>
-              <div className="text-xs text-gray-500 mt-1">{recipe.description}</div>
-              <div className="flex justify-end mt-2">
-                <Button variant="ghost" size="sm" onClick={() => onRemove(recipe.id)}>
-                  移除
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="h-16 flex items-center justify-center text-gray-400 text-sm">
-          暂未安排食谱
+      {isExpanded && (
+        <div className="pl-6 space-y-2">
+          <SearchInput
+            items={recipes}
+            onSearch={setFilteredRecipes}
+            placeholder={`搜索${title}...`}
+            className="mb-2"
+          />
+          <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
+            {filteredRecipes.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-2">
+                {searchQuery ? "没有找到匹配的食谱" : "没有可用的食谱"}
+              </p>
+            ) : (
+              filteredRecipes.map(recipe => (
+                <div
+                  key={recipe.id}
+                  className={`flex items-center gap-2 p-1.5 rounded-md border cursor-pointer transition-colors ${
+                    selectedRecipes.includes(recipe.id)
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                  onClick={() => onSelect(recipe.id)}
+                >
+                  <Checkbox
+                    checked={selectedRecipes.includes(recipe.id)}
+                    onCheckedChange={() => onSelect(recipe.id)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{recipe.title}</p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>
