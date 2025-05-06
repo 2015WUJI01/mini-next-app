@@ -106,8 +106,12 @@ export default function RecipeDetailPage() {
         <div>
           <h3 className="text-lg font-medium mb-3">食材</h3>
           <ul className="list-disc pl-5 space-y-1">
-            {recipe.ingredients.map((ingredient: string, index: number) => (
-              <li key={index} className="text-gray-700">{ingredient}</li>
+            {recipe.ingredients.map((ingredient, index) => (
+              <li key={index} className="text-gray-700">
+                {typeof ingredient === 'string'
+                  ? ingredient
+                  : `${ingredient.name} ${ingredient.amount}`}
+              </li>
             ))}
           </ul>
         </div>

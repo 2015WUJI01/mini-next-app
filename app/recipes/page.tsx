@@ -33,7 +33,7 @@ export default function RecipesPage() {
   }, []);
 
   const loadRecipes = () => {
-    const allRecipes = recipeService.getAllRecipes();
+    const allRecipes = recipeService?.getAllRecipes() || [];
     const formattedRecipes = allRecipes.map(recipe => ({
       id: recipe.id,
       title: recipe.title,
@@ -46,14 +46,15 @@ export default function RecipesPage() {
   };
 
   const handleDeleteRecipe = (id: string) => {
-    if (recipeService.deleteRecipe(id)) {
+    if (recipeService?.deleteRecipe(id)) {
       loadRecipes();
       toast.success("食谱已删除");
     }
   };
 
   const handleExport = () => {
-    const data = recipeService.exportRecipes();
+    const data = recipeService?.exportRecipes();
+    if (!data) return;
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -73,7 +74,7 @@ export default function RecipesPage() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const data = e.target?.result as string;
-      if (recipeService.importRecipes(data)) {
+      if (recipeService?.importRecipes(data)) {
         toast.success("食谱数据已导入");
         loadRecipes();
       } else {
@@ -85,11 +86,8 @@ export default function RecipesPage() {
 
   const handleSearch = (term: string) => {
     setSearchQuery(term);
-    
     if (!recipeService) return;
-    
     const allRecipes = recipeService.getAllRecipes();
-    
     if (!term.trim() && selectedTags.length === 0) {
       const formattedRecipes = allRecipes.map(recipe => ({
         id: recipe.id,
@@ -101,7 +99,6 @@ export default function RecipesPage() {
       setRecipes(formattedRecipes);
       return;
     }
-    
     const filteredRecipes = allRecipes.filter(recipe => {
       const matchesSearch = term.trim() === "" || 
         recipe.title.toLowerCase().includes(term.toLowerCase()) ||
@@ -111,13 +108,10 @@ export default function RecipesPage() {
             ? ingredient.toLowerCase().includes(term.toLowerCase())
             : ingredient.name.toLowerCase().includes(term.toLowerCase())
         );
-      
       const matchesTags = selectedTags.length === 0 || 
         selectedTags.every(tag => recipe.tags?.includes(tag));
-      
       return matchesSearch && matchesTags;
     });
-    
     const formattedRecipes = filteredRecipes.map(recipe => ({
       id: recipe.id,
       title: recipe.title,
@@ -125,7 +119,6 @@ export default function RecipesPage() {
       ingredientsCount: recipe.ingredients.length,
       tags: recipe.tags
     }));
-    
     setRecipes(formattedRecipes);
   };
 

@@ -296,15 +296,15 @@ export default function MealPlanningPage() {
     
     // 分别设置每个餐段的食谱
     selectedMeals.breakfast.forEach(recipeId => {
-      mealPlanningService.setMealPlan(dateStr, 'breakfast', recipeId);
+      mealPlanningService?.setMealPlan(dateStr, 'breakfast', recipeId);
     });
     
     selectedMeals.lunch.forEach(recipeId => {
-      mealPlanningService.setMealPlan(dateStr, 'lunch', recipeId);
+      mealPlanningService?.setMealPlan(dateStr, 'lunch', recipeId);
     });
     
     selectedMeals.dinner.forEach(recipeId => {
-      mealPlanningService.setMealPlan(dateStr, 'dinner', recipeId);
+      mealPlanningService?.setMealPlan(dateStr, 'dinner', recipeId);
     });
     
     const updatedPlan = {
@@ -357,11 +357,13 @@ export default function MealPlanningPage() {
       
       setFutureMealPlans(prev => {
         const currentPlan = prev[dateStr] || { lunch: [], dinner: [] };
-        const currentMeals = currentPlan[mealType];
+        let currentMeals: string[] = [];
+        if (mealType === 'lunch' || mealType === 'dinner') {
+          currentMeals = currentPlan[mealType] || [];
+        }
         const newMeals = currentMeals.includes(recipeId)
-          ? currentMeals.filter(id => id !== recipeId)
+          ? currentMeals.filter((id: string) => id !== recipeId)
           : [...currentMeals, recipeId];
-        
         return {
           ...prev,
           [dateStr]: {
@@ -380,14 +382,12 @@ export default function MealPlanningPage() {
     
     // 保存未来日期的计划
     Object.entries(futureMealPlans).forEach(([dateStr, plan]) => {
-      if (mealPlanningService) {
-        plan.lunch.forEach(recipeId => {
-          mealPlanningService.setMealPlan(dateStr, 'lunch', recipeId);
-        });
-        plan.dinner.forEach(recipeId => {
-          mealPlanningService.setMealPlan(dateStr, 'dinner', recipeId);
-        });
-      }
+      plan.lunch.forEach((recipeId: string) => {
+        mealPlanningService?.setMealPlan(dateStr, 'lunch', recipeId);
+      });
+      plan.dinner.forEach((recipeId: string) => {
+        mealPlanningService?.setMealPlan(dateStr, 'dinner', recipeId);
+      });
     });
     
     setIsQuickSelectMode(false);
