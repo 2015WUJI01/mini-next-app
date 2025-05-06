@@ -3,34 +3,39 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { RECIPE_TAGS } from '@/lib/recipes';
 
-export interface RecipeSearchProps {
-  onSearch?: (query: string) => void;
+interface RecipeSearchProps {
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  selectedTags: string[];
+  onTagSelect: (tag: string) => void;
 }
 
-export function RecipeSearch({ onSearch }: RecipeSearchProps) {
-  const [query, setQuery] = useState('');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (onSearch) {
-      onSearch(query.trim());
-    }
-  };
-
+export function RecipeSearch({ searchQuery, onSearchChange, selectedTags, onTagSelect }: RecipeSearchProps) {
   return (
-    <form onSubmit={handleSearch} className="flex w-full max-w-sm items-center space-x-2">
-      <Input
-        type="text"
-        placeholder="搜索食谱、食材..."
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="flex-1"
-      />
-      <Button type="submit" size="icon">
-        <Search className="h-4 w-4" />
-      </Button>
-    </form>
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Input
+          placeholder="搜索菜谱..."
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="flex-1"
+        />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {RECIPE_TAGS.map((tag) => (
+          <Badge
+            key={tag}
+            variant={selectedTags.includes(tag) ? "default" : "outline"}
+            className="cursor-pointer"
+            onClick={() => onTagSelect(tag)}
+          >
+            {tag}
+          </Badge>
+        ))}
+      </div>
+    </div>
   );
 } 

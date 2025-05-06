@@ -1,13 +1,13 @@
 'use client';
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { RecipeForm, RecipeFormData } from "@/components/RecipeForm";
-import { recipeService, Recipe } from "@/lib/recipes";
-import { toast } from "@/components/ui/use-toast";
+import { recipeService, RECIPE_TAGS, RecipeTag } from "@/lib/recipes";
+import { toast } from "sonner";
 
 export default function EditRecipePage() {
   const router = useRouter();
@@ -22,9 +22,12 @@ export default function EditRecipePage() {
       if (recipe) {
         setRecipeData({
           title: recipe.title,
-          description: recipe.description,
-          ingredients: recipe.ingredients || [],
-          steps: recipe.steps || []
+          description: recipe.description || '',
+          ingredients: recipe.ingredients.map(ing => 
+            typeof ing === 'string' ? ing : `${ing.name} ${ing.amount}`
+          ),
+          steps: recipe.steps || [''],
+          tags: (recipe.tags || []) as RecipeTag[]
         });
       }
       setIsLoading(false);
@@ -33,11 +36,7 @@ export default function EditRecipePage() {
   
   const handleSubmit = (data: RecipeFormData) => {
     if (!recipeService) {
-      toast({
-        title: "更新失败",
-        description: "服务不可用，请稍后重试",
-        variant: "destructive"
-      });
+      toast.error("服务不可用，请稍后重试");
       return;
     }
     
@@ -46,10 +45,7 @@ export default function EditRecipePage() {
       const updatedRecipe = recipeService.updateRecipe(id, data);
       
       if (updatedRecipe) {
-        toast({
-          title: "更新成功",
-          description: `食谱"${updatedRecipe.title}"已成功更新`
-        });
+        toast.success(`食谱"${updatedRecipe.title}"已成功更新`);
         
         // 更新成功后重定向到详情页
         router.push(`/recipes/${id}`);
@@ -58,11 +54,7 @@ export default function EditRecipePage() {
       }
     } catch (error: any) {
       console.error('更新食谱失败:', error);
-      toast({
-        title: "更新失败",
-        description: error.message || "无法更新食谱，请稍后重试",
-        variant: "destructive"
-      });
+      toast.error(error.message || "无法更新食谱，请稍后重试");
     }
   };
   
@@ -100,13 +92,10 @@ export default function EditRecipePage() {
           initialData={recipeData}
           onSubmit={handleSubmit}
           submitLabel="保存修改"
+          availableTags={RECIPE_TAGS}
+          cancelHref={`/recipes/${id}`}
         />
       </CardContent>
-      <CardFooter className="flex justify-start">
-        <Button variant="outline" asChild>
-          <Link href={`/recipes/${id}`}>取消</Link>
-        </Button>
-      </CardFooter>
     </Card>
   );
 } 

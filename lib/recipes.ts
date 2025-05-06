@@ -2,10 +2,27 @@
 export interface Recipe {
   id: string;
   title: string;
-  description: string;
-  ingredients: string[];
+  description?: string;
+  ingredients: (string | { name: string; amount: string })[];
   steps: string[];
+  tags?: string[];  // 添加标签字段
+  createdAt: string;
+  updatedAt: string;
 }
+
+// 预定义的标签选项
+export const RECIPE_TAGS = [
+  '主食',
+  '肉类',
+  '素菜',
+  '汤类',
+  '海鲜',
+  '小吃',
+  '甜点',
+  '饮品'
+] as const;
+
+export type RecipeTag = typeof RECIPE_TAGS[number];
 
 // 初始示例数据
 const initialRecipes: Record<string, Recipe> = {
@@ -22,7 +39,10 @@ const initialRecipes: Record<string, Recipe> = {
       "放入适量盐调味",
       "倒入炒好的鸡蛋，均匀翻炒",
       "撒上葱花即可出锅"
-    ]
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: ["素菜"]
   },
   "2": {
     id: "2",
@@ -38,7 +58,10 @@ const initialRecipes: Record<string, Recipe> = {
       "加入黄瓜丁翻炒",
       "调入酱油、醋、糖调味",
       "最后加入炒熟的花生翻炒均匀即可"
-    ]
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: ["肉类"]
   },
   "3": {
     id: "3",
@@ -54,24 +77,20 @@ const initialRecipes: Record<string, Recipe> = {
       "加入没过肉的热水，大火烧开后转小火",
       "盖上锅盖炖煮40-60分钟",
       "开盖后大火收汁即可"
-    ]
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    tags: ["肉类"]
   }
 };
 
 // 在客户端存储食谱数据
 export class RecipeService {
   private static instance: RecipeService;
-  private recipes: Record<string, Recipe>;
+  private recipes: Recipe[] = [];
 
   private constructor() {
-    // 从本地存储加载食谱，如果没有则使用初始数据
-    const savedRecipes = typeof window !== 'undefined' 
-      ? localStorage.getItem('recipes')
-      : null;
-    
-    this.recipes = savedRecipes 
-      ? JSON.parse(savedRecipes) 
-      : initialRecipes;
+    this.loadRecipes();
   }
 
   public static getInstance(): RecipeService {
@@ -81,54 +100,105 @@ export class RecipeService {
     return RecipeService.instance;
   }
 
+  private loadRecipes() {
+    const recipesData = localStorage.getItem('recipes');
+    if (recipesData) {
+      const parsed = JSON.parse(recipesData);
+      // 兼容对象格式
+      this.recipes = Array.isArray(parsed) ? parsed : Object.values(parsed);
+    }
+  }
+
+  private saveRecipes() {
+    // 始终保存为对象格式，兼容旧数据
+    const obj: Record<string, Recipe> = {};
+    this.recipes.forEach(r => { obj[r.id] = r; });
+    localStorage.setItem('recipes', JSON.stringify(obj));
+  }
+
   // 获取所有食谱
   public getAllRecipes(): Recipe[] {
-    return Object.values(this.recipes);
+    return this.recipes;
   }
 
   // 获取单个食谱
   public getRecipe(id: string): Recipe | null {
-    return this.recipes[id] || null;
+    return this.recipes.find(recipe => recipe.id === id) || null;
   }
 
   // 添加新食谱
-  public addRecipe(recipe: Omit<Recipe, 'id'>): Recipe {
-    const id = Date.now().toString();
-    const newRecipe = { ...recipe, id };
-    this.recipes = {
-      ...this.recipes,
-      [id]: newRecipe
+  public addRecipe(recipe: Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>): Recipe {
+    const newRecipe: Recipe = {
+      ...recipe,
+      id: crypto.randomUUID(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      tags: recipe.tags || [], // 确保新食谱有标签字段
     };
-    this.saveToLocalStorage();
+    this.recipes.push(newRecipe);
+    this.saveRecipes();
     return newRecipe;
   }
 
   // 更新食谱
-  public updateRecipe(id: string, recipe: Partial<Recipe>): Recipe | null {
-    if (!this.recipes[id]) return null;
-    
-    this.recipes[id] = {
-      ...this.recipes[id],
-      ...recipe
+  public updateRecipe(id: string, recipe: Partial<Omit<Recipe, 'id' | 'createdAt' | 'updatedAt'>>): Recipe | null {
+    const index = this.recipes.findIndex(r => r.id === id);
+    if (index === -1) return null;
+
+    const updatedRecipe: Recipe = {
+      ...this.recipes[index],
+      ...recipe,
+      updatedAt: new Date().toISOString(),
     };
-    this.saveToLocalStorage();
-    return this.recipes[id];
+    this.recipes[index] = updatedRecipe;
+    this.saveRecipes();
+    return updatedRecipe;
   }
 
   // 删除食谱
   public deleteRecipe(id: string): boolean {
-    if (!this.recipes[id]) return false;
-    
-    const { [id]: _, ...remaining } = this.recipes;
-    this.recipes = remaining;
-    this.saveToLocalStorage();
+    const index = this.recipes.findIndex(recipe => recipe.id === id);
+    if (index === -1) return false;
+    this.recipes.splice(index, 1);
+    this.saveRecipes();
     return true;
   }
 
-  // 保存到本地存储
-  private saveToLocalStorage(): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('recipes', JSON.stringify(this.recipes));
+  // 导出食谱数据
+  public exportRecipes(): string {
+    // 导出为对象格式，key为id
+    const obj: Record<string, Recipe> = {};
+    this.recipes.forEach(r => { obj[r.id] = r; });
+    return JSON.stringify(obj, null, 2);
+  }
+
+  // 导入食谱数据
+  public importRecipes(data: string): boolean {
+    try {
+      let recipes: any = JSON.parse(data);
+      // 兼容对象格式
+      if (!Array.isArray(recipes)) {
+        if (typeof recipes === 'object' && recipes !== null) {
+          recipes = Object.values(recipes);
+        } else {
+          return false;
+        }
+      }
+      // 验证导入的数据格式
+      const isValid = (recipes as any[]).every((recipe: any) => recipe.id && recipe.title && recipe.ingredients && recipe.steps);
+      if (!isValid) return false;
+      this.recipes = (recipes as any[]).map((recipe: any) => ({
+        ...recipe,
+        tags: recipe.tags || [],
+        description: recipe.description || '',
+        ingredients: recipe.ingredients || [''],
+        steps: recipe.steps || [''],
+      }));
+      this.saveRecipes();
+      return true;
+    } catch (error) {
+      console.error('导入食谱数据失败:', error);
+      return false;
     }
   }
 }

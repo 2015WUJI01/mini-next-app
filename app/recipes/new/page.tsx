@@ -1,13 +1,11 @@
 'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { RecipeForm, RecipeFormData } from "@/components/RecipeForm";
-import { recipeService } from "@/lib/recipes";
-import { toast } from "@/components/ui/use-toast";
+import { recipeService, RECIPE_TAGS, RecipeTag } from "@/lib/recipes";
+import { toast } from "sonner";
 
 // 内部组件用于使用searchParams
 function RecipeFormContainer() {
@@ -19,7 +17,8 @@ function RecipeFormContainer() {
     title: '',
     description: '',
     ingredients: [''],
-    steps: ['']
+    steps: [''],
+    tags: []
   });
   
   // 当URL中有name参数时，自动填充到表单中
@@ -34,11 +33,7 @@ function RecipeFormContainer() {
   
   const handleSubmit = (data: RecipeFormData) => {
     if (!recipeService) {
-      toast({
-        title: "保存失败",
-        description: "服务不可用，请稍后重试",
-        variant: "destructive"
-      });
+      toast.error("服务不可用，请稍后重试");
       return;
     }
     
@@ -46,20 +41,13 @@ function RecipeFormContainer() {
       // 使用RecipeService保存数据
       const newRecipe = recipeService.addRecipe(data);
       
-      toast({
-        title: "保存成功",
-        description: `食谱"${newRecipe.title}"已成功保存`
-      });
+      toast.success(`食谱"${newRecipe.title}"已成功保存`);
       
       // 保存成功后重定向到食谱详情页
       router.push(`/recipes/${newRecipe.id}`);
     } catch (error: any) {
       console.error('保存食谱失败:', error);
-      toast({
-        title: "保存失败",
-        description: error.message || "无法保存食谱，请稍后重试",
-        variant: "destructive"
-      });
+      toast.error(error.message || "无法保存食谱，请稍后重试");
     }
   };
   
@@ -68,6 +56,8 @@ function RecipeFormContainer() {
       initialData={initialData}
       onSubmit={handleSubmit}
       submitLabel="保存食谱"
+      availableTags={RECIPE_TAGS}
+      cancelHref="/recipes"
     />
   );
 }
@@ -85,11 +75,6 @@ export default function NewRecipePage() {
           <RecipeFormContainer />
         </Suspense>
       </CardContent>
-      <CardFooter className="flex justify-start">
-        <Button variant="outline" asChild>
-          <Link href="/recipes">取消</Link>
-        </Button>
-      </CardFooter>
     </Card>
   );
 } 

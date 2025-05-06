@@ -1,8 +1,12 @@
 import "@/app/globals.css"
 import { MainNav } from "@/components/MainNav"
 import { Toaster } from "@/components/ui/toaster"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
 
-export const metadata = {
+const inter = Inter({ subsets: ["latin"] })
+
+export const metadata: Metadata = {
   title: '健康饮食管理',
   description: '记录食谱和规划每日饮食',
 }

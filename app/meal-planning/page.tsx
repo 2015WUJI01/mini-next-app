@@ -52,10 +52,16 @@ import { SearchInput, SearchableItem } from "@/components/ui/search-input";
 // 扩展 CalendarEvent 类型
 interface ExtendedCalendarEvent extends CalendarEvent {
   mealType?: 'breakfast' | 'lunch' | 'dinner';
+  className?: string;
+}
+
+// 扩展 Recipe 类型
+interface ExtendedRecipe extends Recipe {
+  tags?: string[];
 }
 
 export default function MealPlanningPage() {
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [recipes, setRecipes] = useState<ExtendedRecipe[]>([]);
   const [events, setEvents] = useState<ExtendedCalendarEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedMealPlan, setSelectedMealPlan] = useState<MealPlan | null>(null);
@@ -85,16 +91,26 @@ export default function MealPlanningPage() {
       dinner: string[];
     };
   }>({});
-  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<ExtendedRecipe[]>([]);
 
   // 加载食谱数据
   useEffect(() => {
     if (recipeService) {
-      const allRecipes = recipeService.getAllRecipes();
+      const allRecipes = recipeService.getAllRecipes() as ExtendedRecipe[];
       setRecipes(allRecipes);
       setFilteredRecipes(allRecipes);
     }
   }, []);
+
+  // 获取食谱的颜色
+  const getRecipeColor = (recipe: ExtendedRecipe): string => {
+    // 根据食谱类型返回对应的颜色
+    if (recipe.tags?.includes('主食')) return 'bg-yellow-100 text-yellow-800';
+    if (recipe.tags?.includes('肉类')) return 'bg-red-100 text-red-800';
+    if (recipe.tags?.includes('素菜')) return 'bg-green-100 text-green-800';
+    if (recipe.tags?.includes('汤类')) return 'bg-blue-100 text-blue-800';
+    return 'bg-gray-100 text-gray-800';
+  };
 
   // 加载饮食编排数据转换为日历事件
   useEffect(() => {
@@ -108,7 +124,7 @@ export default function MealPlanningPage() {
     const mealPlansData = localStorage.getItem('mealPlans');
     const mealPlans = mealPlansData ? JSON.parse(mealPlansData) : {};
     
-    const allRecipes = recipeService.getAllRecipes();
+    const allRecipes = recipeService.getAllRecipes() as ExtendedRecipe[];
     const recipesMap = new Map(allRecipes.map(recipe => [recipe.id, recipe]));
     
     const newEvents: ExtendedCalendarEvent[] = [];
@@ -141,7 +157,7 @@ export default function MealPlanningPage() {
               title: `☕ ${recipe.title}`,
               start: breakfastStart,
               end: breakfastEnd,
-              color: 'yellow',
+              className: getRecipeColor(recipe),
               mealType: 'breakfast'
             });
           }
@@ -165,7 +181,7 @@ export default function MealPlanningPage() {
               title: `🍽️ ${recipe.title}`,
               start: lunchStart,
               end: lunchEnd,
-              color: 'green',
+              className: getRecipeColor(recipe),
               mealType: 'lunch'
             });
           }
@@ -189,7 +205,7 @@ export default function MealPlanningPage() {
               title: `🌙 ${recipe.title}`,
               start: dinnerStart,
               end: dinnerEnd,
-              color: 'indigo',
+              className: getRecipeColor(recipe),
               mealType: 'dinner'
             });
           }
@@ -238,7 +254,7 @@ export default function MealPlanningPage() {
   };
   
   // 获取指定餐食的所有食谱详情
-  const getMealRecipes = (mealType: 'breakfast' | 'lunch' | 'dinner'): Recipe[] => {
+  const getMealRecipes = (mealType: 'breakfast' | 'lunch' | 'dinner'): ExtendedRecipe[] => {
     if (!selectedMealPlan || !selectedMealPlan[mealType] || !recipeService) return [];
     
     // 确保是数组
@@ -250,11 +266,11 @@ export default function MealPlanningPage() {
     return recipeIds
       .map(id => {
         if (recipeService) {
-          return recipeService.getRecipe(id);
+          return recipeService.getRecipe(id) as ExtendedRecipe;
         }
         return null;
       })
-      .filter((recipe): recipe is Recipe => recipe !== null);
+      .filter((recipe): recipe is ExtendedRecipe => recipe !== null);
   };
   
   // 处理食谱选择
@@ -387,7 +403,7 @@ export default function MealPlanningPage() {
   }, [isQuickSelectMode, selectedMeals, recipes]);
 
   // 处理快速选择模式下的搜索
-  const handleQuickSearch = (items: Recipe[]) => {
+  const handleQuickSearch = (items: ExtendedRecipe[]) => {
     setFilteredRecipes(items);
   };
 
@@ -662,7 +678,7 @@ interface MealSectionProps {
   title: string;
   icon: React.ElementType;
   color: string;
-  recipes: Recipe[];
+  recipes: ExtendedRecipe[];
   selectedRecipes: string[];
   onSelect: (recipeId: string) => void;
 }
