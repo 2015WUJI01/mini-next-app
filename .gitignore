@@ -30,3 +30,6 @@ next-env.d.ts
 .vscode
 
 ecosystem.config.js
+
+# 测试题目数据
+test-data/
