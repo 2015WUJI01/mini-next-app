@@ -41,8 +41,10 @@ export default function Navigation() {
             <button
               key={item.id}
               onClick={() => setCurrentView(item.id)}
-              className={`block w-full text-left px-4 py-2 rounded hover:bg-accent text-secondary-foreground transition-colors ${
-                currentView === item.id ? 'bg-accent' : ''
+              className={`block w-full text-left px-4 py-2 rounded transition-colors ${
+                currentView === item.id 
+                  ? 'bg-primary text-primary-foreground font-medium' 
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               }`}
             >
               {item.label}
