@@ -5,6 +5,7 @@ import Link from 'next/link'
 import IntegrationManagement from './IntegrationManagement'
 import Settings from './Settings'
 import Saves from './Saves'
+import ProjectStart from './ProjectStart'
 import { knowledgeAreas } from '../../lib/knowledge-areas'
 
 export default function Navigation() {
@@ -34,7 +35,7 @@ export default function Navigation() {
 
     switch (currentView) {
       case 'project-start':
-        return <div>项目启动</div>
+        return <ProjectStart />
       case 'integration_management':
         return <IntegrationManagement />
       case 'knowledge':
