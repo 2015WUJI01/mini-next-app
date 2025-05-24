@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 背景 -->
+  <rect width="64" height="64" fill="#1E293B"/>
+  
+  <!-- 像素风格小人 -->
+  <!-- 头部 -->
+  <rect x="24" y="12" width="16" height="16" fill="#94A3B8"/>
+  
+  <!-- 眼镜 -->
+  <rect x="26" y="16" width="4" height="2" fill="#1E293B"/>
+  <rect x="34" y="16" width="4" height="2" fill="#1E293B"/>
+  <rect x="30" y="17" width="4" height="1" fill="#1E293B"/>
+  
+  <!-- 身体 -->
+  <rect x="28" y="28" width="8" height="12" fill="#94A3B8"/>
+  
+  <!-- 手臂 -->
+  <rect x="20" y="32" width="8" height="4" fill="#94A3B8"/>
+  <rect x="36" y="32" width="8" height="4" fill="#94A3B8"/>
+  
+  <!-- 腿 -->
+  <rect x="28" y="40" width="3" height="8" fill="#94A3B8"/>
+  <rect x="33" y="40" width="3" height="8" fill="#94A3B8"/>
+  
+  <!-- 领带 -->
+  <rect x="31" y="28" width="2" height="6" fill="#475569"/>
+  <rect x="30" y="34" width="4" height="2" fill="#475569"/>
+</svg> 
