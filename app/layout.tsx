@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import '../styles/globals.css'
+import './globals.css'
 import React from 'react'
 import Navigation from './components/Navigation'
 
@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="zh">
-      <body className="bg-background text-foreground">
+    <html lang="zh" suppressHydrationWarning>
+      <body className="min-h-screen bg-background text-foreground">
         <Navigation />
       </body>
     </html>

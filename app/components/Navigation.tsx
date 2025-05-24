@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Settings from './Settings'
 
 export default function Navigation() {
   const [currentView, setCurrentView] = useState('knowledge')
@@ -21,7 +22,7 @@ export default function Navigation() {
       case 'saves':
         return <div>存档内容区域</div>
       case 'settings':
-        return <div>设置内容区域</div>
+        return <Settings />
       default:
         return <div>项目启动</div>
     }
