@@ -1,22 +1,37 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import IntegrationManagement from './IntegrationManagement'
 import Settings from './Settings'
+import { knowledgeAreas } from '../../lib/knowledge-areas'
 
 export default function Navigation() {
   const [currentView, setCurrentView] = useState('knowledge')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const navigationItems = [
     { id: 'knowledge', label: '知识' },
+    ...knowledgeAreas.map(area => ({
+      id: area.id,
+      label: area.name
+    })),
     { id: 'saves', label: '存档' },
-    { id: 'settings', label: '设置' }
+    { id: 'settings', label: '设置' },
   ]
 
   const renderContent = () => {
+    if (!mounted) return null
+
     switch (currentView) {
       case 'project-start':
         return <div>项目启动</div>
+      case 'integration_management':
+        return <IntegrationManagement />
       case 'knowledge':
         return <div>知识 内容区域</div>
       case 'saves':
@@ -24,7 +39,7 @@ export default function Navigation() {
       case 'settings':
         return <Settings />
       default:
-        return <div>项目启动</div>
+        return <div>{currentView}</div>
     }
   }
 
