@@ -16,10 +16,14 @@ export default function Navigation() {
   }, [])
 
   const navigationItems = [
+    { id: 'project-start', label: '项目启动' },
     { id: 'knowledge', label: '知识' },
     ...knowledgeAreas.map(area => ({
       id: area.id,
-      label: area.name
+      label: area.name,
+      progress: true,
+      progressValue: 0,
+      level: 1,
     })),
     { id: 'saves', label: '存档' },
     { id: 'settings', label: '设置' },
@@ -63,7 +67,31 @@ export default function Navigation() {
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               }`}
             >
-              {item.label}
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center justify-between">
+                  <span>{item.label}</span>
+                  <div className="flex items-center gap-2">
+                    {item?.progress && (
+                      <span className="text-xs text-muted-foreground">{item.progressValue}%</span>
+                    )}
+                    {item?.level && (
+                      <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
+                        Lv.{item.level}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {item?.progress && (
+                  <div className="w-full">
+                    <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-300"
+                        style={{ width: `${item.progressValue}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </button>
           ))}
         </nav>
