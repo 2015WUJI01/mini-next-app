@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import React from 'react'
 import Navigation from './components/Navigation'
+import { Toaster } from '@/components/ui/toaster'
 
 export const metadata: Metadata = {
   title: 'PMP Sim Idle',
@@ -17,6 +18,7 @@ export default function RootLayout({
     <html lang="zh" suppressHydrationWarning>
       <body className="min-h-screen bg-background text-foreground">
         {children}
+        <Toaster />
       </body>
     </html>
   )

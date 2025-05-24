@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import IntegrationManagement from './IntegrationManagement'
 import Settings from './Settings'
+import Saves from './Saves'
 import { knowledgeAreas } from '../../lib/knowledge-areas'
 
 export default function Navigation() {
@@ -35,7 +36,7 @@ export default function Navigation() {
       case 'knowledge':
         return <div>知识 内容区域</div>
       case 'saves':
-        return <div>存档内容区域</div>
+        return <Saves />
       case 'settings':
         return <Settings />
       default:
