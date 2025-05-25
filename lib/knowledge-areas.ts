@@ -4,7 +4,7 @@ export interface ProcessGroupTimelineType {
   id: string;
   name: string;
 }
-export const processGroupTimelineTypeMap: Record<string, > = {
+export const processGroupTimelineTypeMap: Record<string, ProcessGroupTimelineType> = {
   '启动': {
     id: 'initiation',
     name: '启动'
@@ -121,10 +121,10 @@ export const knowledgeAreas: KnowledgeArea[] = [
 export interface ProcessGroup {
   id: string;
   name: string;
-  processGroupTimelineType: ProcessGroupTimelineType;
-  knowledgeArea: KnowledgeArea;
-  inputs: Document[];
-  outputs: Document[];
+  processGroupTimelineType?: ProcessGroupTimelineType;
+  knowledgeArea?: KnowledgeArea;
+  inputs?: Document[];
+  outputs?: Document[];
 }
 export const processGroups: ProcessGroup[] = [
   {
