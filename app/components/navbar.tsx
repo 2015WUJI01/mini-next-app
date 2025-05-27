@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useAppStore } from '../store';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Settings, Upload, Download } from 'lucide-react';
 import {
@@ -11,16 +10,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { exportData, importData, getUser } from '../lib/storage';
-import { useEffect } from 'react';
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export function Navbar() {
-  const { theme, toggleTheme, user, setUser } = useAppStore();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // 只在客户端执行
-    const u = getUser();
-    if (u) setUser(u);
-  }, [setUser]);
+    setMounted(true);
+  }, []);
 
   const handleImport = async () => {
     const input = document.createElement('input');
@@ -55,13 +54,15 @@ export function Navbar() {
         </div>
 
         <div className="ml-auto flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => toggleTheme()}
-          >
-            {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
-          </Button>
+          {mounted && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            >
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
+          )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
