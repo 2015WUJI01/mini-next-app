@@ -78,43 +78,43 @@ export const knowledgeAreaMap: Record<string, KnowledgeArea> = {
 export const knowledgeAreas: KnowledgeArea[] = [
   {
     id: 'integration_management',
-    name: '整合管理',
+    name: '整合管理（融炼⚗️）',
   },
   {
     id: 'scope_management',
-    name: '范围管理'
+    name: '范围管理（精准🎯）'
   },
   {
     id: 'schedule_management',
-    name: '进度管理'
+    name: '进度管理（敏捷🏃‍♂️）'
   },
   {
     id: 'cost_management',
-    name: '成本管理'
+    name: '成本管理（魔法🪄）'
   },
   {
     id: 'quality_management',
-    name: '质量管理'
+    name: '质量管理（防御🛡️）'
   },
   {
     id: 'resource_management',
-    name: '资源管理'
+    name: '资源管理（力量💪）'
   },
   {
     id: 'communication_management',
-    name: '沟通管理'
+    name: '沟通管理（感知👁️）'
   },
   {
     id: 'risk_management',
-    name: '风险管理'
+    name: '风险管理（闪避🌀）'
   },
   {
     id: 'procurement_management',
-    name: '采购管理'
+    name: '采购管理（🛒）'
   },
   {
     id: 'stakeholder_management',
-    name: '相关方管理'
+    name: '相关方管理（🧑‍🤝‍🧑）'
   }
 ];
 
